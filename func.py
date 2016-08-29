@@ -1,6 +1,9 @@
 import requests
 import re
 import info
+import winsound
+import webbrowser
+import os
 
 
 def login(session):
@@ -8,6 +11,7 @@ def login(session):
     info.data['Register[password]'] = input('密码：')
     response = session.post(info.login_url, data=info.data)
     pattern = re.compile('"nickname":"(.*?)","avatar":.*?,"steam_id":.*?,"gold":"(.*?)","level":"(.*?)"')
+    os.system('cls')
     try:
         User_info = re.findall(pattern, str(response.content))[0]
         print('登陆成功！')
@@ -32,9 +36,12 @@ def get_items_info():
     return info.item_info
 
 
-def submit_order(item_info):
+def submit_order(item_info, ignored_item_id_list):
     for item in item_info:
-        if float(item["discount"]) < 7.0:
+        if float(item["discount"]) < 8.0 and item['id'] not in ignored_item_id_list:
             headers = info.headers
             headers['Referer'] = 'http://market.vpgame.com/product.html?product_id=' + item['id']
+            winsound.Beep(600, 500)
+            webbrowser.open_new(headers['Referer'])
+            ignored_item_id_list.append(item['id'])
             print(headers['Referer'])
