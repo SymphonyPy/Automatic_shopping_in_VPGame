@@ -13,8 +13,9 @@ if __name__ == '__main__':
         else:
             break
     request_discount = float(input('最高折扣限制（最高为10）：'))
+    auto_browser = input("自动打开浏览器（'Y/N'）：")
     print()
     while (True):
         item_info = func.get_items_info()
-        func.submit_order(user_info, item_info, ignored_item_id_list, request_discount,session)
+        func.submit_order(user_info, item_info, ignored_item_id_list, request_discount, auto_browser, session)
         time.sleep(5)
