@@ -11,14 +11,19 @@ def login(session):
     info.data['Register[username]'] = input('用户名/邮箱：')
     info.data['Register[password]'] = input('密码：')
     response = session.post(info.login_url, data=info.data)
-    pattern = re.compile('"nickname":"(.*?)","avatar":.*?,"steam_id":.*?,"gold":"(.*?)","level":"(.*?)"')
+    pattern = re.compile(
+        '"nickname":"(.*?)","avatar":.*?,"steam_id":.*?,"gold":"(.*?)","level":"(.*?)"},"session_id":"(.*?)","user_id":"(.*?)"')
     os.system('cls')
     try:
         User_info = re.findall(pattern, str(response.content))[0]
+        i = 0
+        for tag in ['nickname', 'gold', 'level', 'session_id', 'user_id']:
+            info.user_info[tag] = User_info[i]
+            i += 1
         print('登陆成功！')
-        print('用户名：' + User_info[0] + '\n' + '等级：' + User_info[2] + '\n' + 'P豆：' + User_info[1])
-        return True
-
+        print('用户名：' + info.user_info['nickname'] + '\n' + '等级：' + info.user_info['level'] + '\n' + 'P豆：' +
+              info.user_info['gold'])
+        return info.user_info
     except:
         print('登录失败')
         return False
@@ -26,35 +31,30 @@ def login(session):
 
 def get_items_info():
     response = requests.get(info.item_info_url)
-    pattern = re.compile(
-        '''"id":"(\d+)","availably":.*?,"status":.*?,"type":.*?,"num":.*?,"price":(.*?),"views":.*?,"inventory":"(.*?)","discount":(.*?),"max_buy_num":(.*?),"description":.*?,"create_time"''')
-    content = re.findall(pattern, str(response.content).replace(' ', '').replace('\\n', ''))
+    dict = response.json()
+    list = []
     for i in range(0, 15):
-        j = 0
-        for tag in ['id', 'price', "inventory", "discount", 'max_buy_num']:
-            if tag != 'discount':
-                info.item_info[i][tag] = int(content[i][j])
-            else:
-                info.item_info[i][tag] = float(content[i][j])
-            j += 1
-        if info.item_info[i]['discount'] != 0:
-            info.item_info[i]['market_price'] = int(info.item_info[i]['price'] * 10 / info.item_info[i]['discount'])
-        else:
-            info.item_info[i]['market_price'] = 999999
-    return info.item_info
+        list.append(dict['body']['item'][i])
+    return list
 
 
-def submit_order(item_info, ignored_item_id_list, request_discount):
+def submit_order(user_info, item_info, ignored_item_id_list, request_discount, session):
     for item in item_info:
-        if float(item["discount"]) <= request_discount and item['id'] not in ignored_item_id_list and item[
-            'market_price'] >= 1000:
+        if float(item["discount"]) <= request_discount and item['id'] not in ignored_item_id_list and item['item'][
+            'market_price'] >= 800:
             headers = info.headers
-            headers['Referer'] = 'http://market.vpgame.com/product.html?product_id=' + str(item['id'])
+            headers['Referer'] = 'http://market.vpgame.com/product.html?product_id=' + item['id'] + '&num=' + item[
+                'inventory']
+            # order_data = info.order_data
+            # order_data['product_id'] = str(item['id'])
+            # order_data['num'] = str(item['inventory'])
+            # order_data['session'] = user_info['session_id']
+            # submit_order_url = info.submit_order_url_1 + user_info['user_id'] + info.submit_order_url_2
+            # session.post(submit_order_url, data=order_data, headers=headers)
             winsound.Beep(600, 500)
             webbrowser.open_new(headers['Referer'])
             ignored_item_id_list.append(item['id'])
-            print(
-                '价格：%d\t原价：%d\t折扣：%.1f\t数量：%d' % (
-                item['price'], item['market_price'], item['discount'], item['inventory']))
+            print('物品名称：%s\t价格：%s\t原价：%s\t折扣：%s\t数量：%s' % (
+                item['description'], item['price'], item['item']['market_price'], item['discount'], item['inventory']))
             print(headers['Referer'])
             print('当前时间：' + str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + '\n')
