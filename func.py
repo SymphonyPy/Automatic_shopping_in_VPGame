@@ -34,9 +34,14 @@ def get_items_info():
     dict = response.json()
     list = []
     for i in range(0, 15):
+        dict['body']['item'][i]['info_from_steam'] = get_item_price_in_steam(dict['body']['item'][i])
         list.append(dict['body']['item'][i])
     return list
 
+def get_item_price_in_steam(item):
+    return requests.get(info.item_info_in_steam_url+item['item']['name']).json()
+
+# def judge():
 
 def submit_order(user_info, item_info, ignored_item_id_list, request_discount, auto_browser, session):
     for item in item_info:
@@ -55,6 +60,7 @@ def submit_order(user_info, item_info, ignored_item_id_list, request_discount, a
                 webbrowser.open_new(item_url)
             ignored_item_id_list.append(item['id'])
             print('物品名称：%s\t价格：%s\t原价：%s\t折扣：%s\t数量：%s' % (
-                item['description'], item['price'], item['item']['market_price'], item['discount'], item['inventory']))
+                item['item']['name'], item['price'], item['item']['market_price'], item['discount'], item['inventory']))
+            print('Steam：最低价格：%s\t中位价格：%s\t数量：%s' %(item['info_from_steam']['lowest_price'],item['info_from_steam']['median_price'],item['info_from_steam']['volume']))
             print(item_url)
             print('当前时间：' + str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + '\n')

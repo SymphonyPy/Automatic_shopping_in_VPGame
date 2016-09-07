@@ -30,6 +30,7 @@ for i in range(0, 15):
         "description": ''
     })
 login_url = 'http://passport.vpgame.com/login.html?redirect=http://www.vpgame.com/'
-item_info_url = 'http://www.vpgame.com/gateway/v1/market/search?callback=&current_page=1&page_size=15&product_type=sell&order_type=update_time'
+item_info_url = 'http://www.vpgame.com/gateway/v1/market/search?callback=&current_page=1&page_size=15&lang=en_US&product_type=sell&order_type=update_time'
+item_info_in_steam_url = 'http://steamcommunity.com/market/priceoverview/?appid=570&currency=1&market_hash_name='
 submit_order_url_1 = 'http://www.vpgame.com/gateway/v1/market/'
 submit_order_url_2 = '/order/generate'
