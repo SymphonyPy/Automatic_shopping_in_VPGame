@@ -5,6 +5,7 @@ import time
 if __name__ == '__main__':
     session = requests.session()
     ignored_item_id_list = []
+    aimed_item = []
     user_info = {}
     while (True):
         user_info = func.login(session)
@@ -17,5 +18,6 @@ if __name__ == '__main__':
     print()
     while (True):
         item_info = func.get_items_info()
-        func.submit_order(user_info, item_info, ignored_item_id_list, request_discount, auto_browser, session)
+        aimed_item = func.judge(item_info, request_discount, ignored_item_id_list)
+        func.submit_order(user_info, aimed_item, auto_browser, session)
         time.sleep(5)
