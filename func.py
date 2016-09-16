@@ -45,7 +45,7 @@ def get_items_info():
         except:
             false = 0
     list = []
-    for i in range(0, 15):
+    for i in range(0, 30):
         list.append(dict['body']['item'][i])
     return list
 
@@ -57,23 +57,22 @@ def get_item_price_in_steam(item):
         return False
 
 
-def judge(item_info, request_discount, ignored_item_id_list, user_info, session):
-    aimed_item = []
-    for item in item_info:
-        if float(item["discount"]) <= request_discount and item['id'] not in ignored_item_id_list and item['item'][
-            'market_price'] >= 500:
-            try:
-                ignored_item_id_list.append(item['id'])
-                item['info_from_steam'] = get_item_price_in_steam(item)
-                if float(item['item']['price']) * 0.5 <= float(
-                        item['info_from_steam']['lowest_price'].replace('$', '')):
-                    submit_order(user_info, item, session)
-                    aimed_item.append(item)
-            except:
-                ignored_item_id_list.append(item['id'])
+def zip_arguments(item_info, ignored_item_id_list, request_discount, user_info, session):
+    return zip(item_info, [ignored_item_id_list] * 30, [request_discount] * 30, [user_info] * 30, [session] * 30)
+
+
+def judge_and_submit_order(item, ignored_item_id_list, request_discount, user_info, session):
+    if float(item["discount"]) <= request_discount and item['id'] not in ignored_item_id_list and item['item'][
+        'market_price'] >= 500:
+        try:
+            item['info_from_steam'] = get_item_price_in_steam(item)
+            if float(item['item']['price']) * 0.5 <= float(
+                    item['info_from_steam']['lowest_price'].replace('$', '')):
                 submit_order(user_info, item, session)
-                aimed_item.append(item)
-    return aimed_item
+                return item
+        except:
+            submit_order(user_info, item, session)
+            return item
 
 
 def submit_order(user_info, item, session):

@@ -82,3 +82,5 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 *.pyc
+personal_account_info.py
+test.py
