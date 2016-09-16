@@ -18,6 +18,7 @@ order_data = {
     'session': '',
     'lang': 'zh_CN'
 }
+email_headers = ['来生意了！', '出来接客！']
 item_info = []
 for i in range(0, 15):
     item_info.append({
@@ -34,3 +35,4 @@ item_info_url = 'http://www.vpgame.com/gateway/v1/market/search?callback=&curren
 item_info_in_steam_url = 'http://steamcommunity.com/market/priceoverview/?appid=570&currency=1&market_hash_name='
 submit_order_url_1 = 'http://www.vpgame.com/gateway/v1/market/'
 submit_order_url_2 = '/order/generate'
+my_shopping_cart_url = 'http://market.vpgame.com/order/manage.html'

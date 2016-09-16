@@ -5,11 +5,17 @@ import winsound
 import webbrowser
 import os
 import time
+import random
+import smtplib
+from email.mime.text import MIMEText
+from email.header import Header
 
 
-def login(session):
-    info.data['Register[username]'] = input('用户名/邮箱：')
-    info.data['Register[password]'] = input('密码：')
+def login(session, account):
+    # info.data['Register[username]'] = input('用户名/邮箱：')
+    # info.data['Register[password]'] = input('密码：')
+    info.data['Register[username]'] = account['username']
+    info.data['Register[password]'] = account['password']
     response = session.post(info.login_url, data=info.data)
     pattern = re.compile(
         '"nickname":"(.*?)","avatar":.*?,"steam_id":.*?,"gold":"(.*?)","level":"(.*?)"},"session_id":"(.*?)","user_id":"(.*?)"')
@@ -31,7 +37,13 @@ def login(session):
 
 def get_items_info():
     response = requests.get(info.item_info_url)
-    dict = response.json()
+    false = 0
+    while false == 0:
+        try:
+            dict = response.json()
+            false = 1
+        except:
+            false = 0
     list = []
     for i in range(0, 15):
         list.append(dict['body']['item'][i])
@@ -39,46 +51,86 @@ def get_items_info():
 
 
 def get_item_price_in_steam(item):
-    print(requests.get(info.item_info_in_steam_url + item['item']['name']).json())
-    return requests.get(info.item_info_in_steam_url + item['item']['name']).json()
+    try:
+        return requests.get(info.item_info_in_steam_url + item['item']['name']).json()
+    except:
+        return False
 
 
-def judge(item_info, request_discount, ignored_item_id_list):
+def judge(item_info, request_discount, ignored_item_id_list, user_info, session):
     aimed_item = []
     for item in item_info:
         if float(item["discount"]) <= request_discount and item['id'] not in ignored_item_id_list and item['item'][
-            'market_price'] >= 800:
+            'market_price'] >= 500:
             try:
+                ignored_item_id_list.append(item['id'])
                 item['info_from_steam'] = get_item_price_in_steam(item)
-                if float(item['item']['price']) >= 0.8 * float(
+                if float(item['item']['price']) * 0.5 <= float(
                         item['info_from_steam']['lowest_price'].replace('$', '')):
-                    ignored_item_id_list.append(item['id'])
+                    submit_order(user_info, item, session)
                     aimed_item.append(item)
             except:
+                ignored_item_id_list.append(item['id'])
+                submit_order(user_info, item, session)
                 aimed_item.append(item)
     return aimed_item
 
 
-def submit_order(user_info, aimed_item, auto_browser, session):
-    for item in aimed_item:
-        item_url = 'http://market.vpgame.com/product.html?product_id=' + item['id'] + '&num=' + item[
-            'inventory']
-        order_data = info.order_data
-        order_data['product_id'] = item['id']
-        order_data['num'] = item['inventory']
-        order_data['session'] = user_info['session_id']
-        submit_order_url = info.submit_order_url_1 + user_info['user_id'] + info.submit_order_url_2
-        session.post(submit_order_url, data=order_data)
+def submit_order(user_info, item, session):
+    item['url'] = 'http://market.vpgame.com/product.html?product_id=' + item['id'] + '&num=' + item[
+        'inventory']
+    order_data = info.order_data
+    order_data['product_id'] = item['id']
+    order_data['num'] = item['inventory']
+    order_data['session'] = user_info['session_id']
+    submit_order_url = info.submit_order_url_1 + user_info['user_id'] + info.submit_order_url_2
+    session.post(submit_order_url, data=order_data)
+
+
+def notification(auto_browser, notification_by_email, aimed_item, qq_email_account):
+    express_in_CMD(auto_browser, aimed_item)
+    if (notification_by_email == 'Y'):
+        email(aimed_item, qq_email_account)
+
+
+def express_in_CMD(auto_browser, aimed_item):
+    if (aimed_item != []):
         winsound.Beep(600, 500)
-        if (auto_browser == 'Y'):
-            webbrowser.open_new(item_url)
-        print('物品名称：%s\t价格：%s\t原价：%s\t折扣：%s\t数量：%s' % (
-            item['item']['name'], item['price'], item['item']['market_price'], item['discount'], item['inventory']))
-        try:
-            print('Steam：最低价格：%s\t中位价格：%s\t数量：%s' % (
-                item['info_from_steam']['lowest_price'], item['info_from_steam']['median_price'],
-                item['info_from_steam']['volume']))
-        except:
-            print('Steam访问过于频繁！')
-        print(item_url)
-        print('当前时间：' + str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + '\n')
+        for item in aimed_item:
+            if (auto_browser == 'Y'):
+                webbrowser.open_new(item['url'])
+            print('物品名称：%s\t价格：%s\t原价：%s\t折扣：%s\t数量：%s' % (
+                item['item']['name'], item['price'], item['item']['market_price'], item['discount'], item['inventory']))
+            try:
+                print('Steam：最低价格：%s\t中位价格：%s\t数量：%s' % (
+                    item['info_from_steam']['lowest_price'], item['info_from_steam']['median_price'],
+                    item['info_from_steam']['volume']))
+            except:
+                print('Steam访问过于频繁！')
+            print(item['url'])
+            print('当前时间：' + str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + '\n')
+
+
+def email(aimed_item, qq_email_account):
+    if (aimed_item != []):
+        mail_host = "smtp.qq.com"
+        mail_user = qq_email_account['mail_user']
+        mail_pass = qq_email_account['mail_pass']
+        sender = qq_email_account['mail_user']
+        receivers = [qq_email_account['mail_user']]
+        msg_list = []
+        income = 0
+        for item in aimed_item:
+            income += int(item['item']['market_price']) - int(item['price'])
+            msg_str = '物品名称：%s\t价格：%s\t原价：%s\t折扣：%s\t数量：%s' % (
+                item['item']['name'], item['price'], item['item']['market_price'], item['discount'], item['inventory'])
+            msg_list.append(msg_str)
+        msg = '\n\n\n\n'.join(msg_list) + '\n\n\n\n' + info.my_shopping_cart_url
+        message = MIMEText(msg, 'plain', 'utf-8')
+        message['From'] = Header(random.choice(info.email_headers), 'utf-8')
+        message['To'] = Header("My Lord", 'utf-8')
+        message['Subject'] = '预计收入：' + str(income) + 'P豆'
+        smtpObj = smtplib.SMTP_SSL(mail_host, 465)
+        smtpObj.login(mail_user, mail_pass)
+        smtpObj.sendmail(sender, receivers, message.as_string())
+        smtpObj.quit()
