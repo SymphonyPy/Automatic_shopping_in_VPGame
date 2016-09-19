@@ -65,7 +65,8 @@ def zip_arguments(item_info, ignored_item_id_list, request_discount, user_info, 
 def judge_and_submit_order(item, ignored_item_id_list, request_discount, user_info, session):
     if (float(item["discount"]) <= request_discount and item['id'] not in ignored_item_id_list and item['item'][
         'market_price'] >= 500) or (
-            item['item']['name'] in personal_account_info.aimed_item and item['id'] not in ignored_item_id_list):
+                    item['item']['name'] in personal_account_info.aimed_item and item[
+                'id'] not in ignored_item_id_list):
         try:
             item['info_from_steam'] = get_item_price_in_steam(item)
             if float(item['item']['price']) * 0.5 <= float(
@@ -122,7 +123,7 @@ def email(aimed_item, qq_email_account):
         msg_list = []
         income = 0
         for item in aimed_item:
-            income += (int(item['item']['market_price']) - int(item['price'])) * item['inventory']
+            income += (int(item['item']['market_price']) - int(item['price'])) * int(item['inventory'])
             msg_str = '物品名称：%s\t价格：%s\t原价：%s\t折扣：%s\t数量：%s' % (
                 item['item']['name'], item['price'], item['item']['market_price'], item['discount'], item['inventory'])
             msg_list.append(msg_str)

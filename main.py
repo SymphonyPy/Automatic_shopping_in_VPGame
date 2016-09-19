@@ -16,7 +16,7 @@ if __name__ == '__main__':
             continue
         else:
             break
-    while(True):
+    while (True):
         request_discount = float(input('最高折扣限制（最高为10）：'))
         auto_browser = input("自动打开浏览器（'Y/N'）：")
         notification_by_email = input("通过邮件推送提醒（'Y/N'）:")
@@ -32,16 +32,17 @@ if __name__ == '__main__':
                     if item != None:
                         ignored_item_id_list.append(item['id'])
                         aimed_item.append(item)
-                func.notification(auto_browser, notification_by_email, aimed_item, personal_account_info.qq_email_account)
-                pool.close()
+                func.notification(auto_browser, notification_by_email, aimed_item,
+                                  personal_account_info.qq_email_account)
             except:
                 print("网络连接异常")
                 print('当前时间：' + str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + '\n')
+            pool.close()
             stop = 0
             if (msvcrt.kbhit()):
-                if(msvcrt.getch==b'\x1b'):
+                if (msvcrt.getch == b'\x1b'):
                     stop = 1
                 break
-            if(stop == 1):
+            if (stop == 1):
                 break
             time.sleep(5)
