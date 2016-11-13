@@ -18,6 +18,8 @@ def login(account, session=requests.session()):
     }
     homepage_url = "http://www.vpgame.com/"
     login_url = "http://passport.vpgame.com/login.html?redirect=http://www.vpgame.com"
+    sent_url = "http://passport.vpgame.com/verify/sent.html"
+    verify_url = "http://passport.vpgame.com/login/accountverify.html?redirect=http://passport.vpgame.com/login.html?redirect=http://www.vpgame.com"
     session.post(login_url, data=data)
     pattern = re.compile(
         '''"nickname":"(.*?)".*?"gold":"(.*?)","level":"(.*?)"}.*?"session_id":"(.*?)","user_id":"(.*?)"''')
@@ -29,6 +31,10 @@ def login(account, session=requests.session()):
         print(user_info)
         return user_info
     except:
-        print("Login failed!")
+        data = {'name': account["username"]}
+        print(session.post(sent_url, data=data).text)
+        data = {'email': account["username"], 'verify-code': ''}
+        data['verify-code'] = input("Verify Code:")
+        session.post(verify_url, data=data)
 
 # login(personal_account_info.VPGame_account)

@@ -26,3 +26,4 @@ if __name__ == '__main__':
         print(random_time)
         print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + '\n')
         time.sleep(random_time)
+        print("\n\n")
