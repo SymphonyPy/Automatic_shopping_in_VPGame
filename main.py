@@ -1,48 +1,28 @@
-import func
-import requests
+import Item
 import time
-import msvcrt
+import login
+import random
+import requests
+import get_info_item
 import multiprocessing
 import personal_account_info
 
+
+def for_multi(primary_info, user_info, session):
+    modified_item = Item.Item(primary_info)
+    modified_item.operate(user_info=user_info, session=session)
+
+
 if __name__ == '__main__':
     session = requests.session()
-    ignored_item_id_list = []
-    aimed_item = []
-    user_info = {}
-    while (True):
-        user_info = func.login(session, personal_account_info.VPGame_account)
-        if user_info == False:
-            continue
-        else:
-            break
-    while (True):
-        request_discount = float(input('最高折扣限制（最高为10）：'))
-        auto_browser = input("自动打开浏览器（'Y/N'）：")
-        notification_by_email = input("通过邮件推送提醒（'Y/N'）:")
-        print()
-        while (True):
-            aimed_item = []
-            pool = multiprocessing.Pool()
-            try:
-                item_info = func.get_items_info()
-                data = func.zip_arguments(item_info, ignored_item_id_list, request_discount, user_info, session)
-                item_info = pool.starmap(func.judge_and_submit_order, data)
-                for item in item_info:
-                    if item != None:
-                        ignored_item_id_list.append(item['id'])
-                        aimed_item.append(item)
-                func.notification(auto_browser, notification_by_email, aimed_item,
-                                  personal_account_info.qq_email_account)
-            except:
-                print("网络连接异常")
-                print('当前时间：' + str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + '\n')
-            pool.close()
-            stop = 0
-            if (msvcrt.kbhit()):
-                if (msvcrt.getch == b'\x1b'):
-                    stop = 1
-                break
-            if (stop == 1):
-                break
-            time.sleep(5)
+    user_info = login.login(personal_account_info.VPGame_account, session=session)
+    while True:
+        modified_list = []
+        primary_list = get_info_item.get()
+        pool = multiprocessing.Pool()
+        pool.starmap(for_multi, zip(primary_list, [user_info] * 30, [session] * 30))
+        pool.close()
+        random_time = random.random() + 1
+        print(random_time)
+        print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + '\n')
+        time.sleep(random_time)
