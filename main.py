@@ -19,7 +19,7 @@ if __name__ == '__main__':
     while True:
         modified_list = []
         primary_list = get_info_item.get()
-        pool = multiprocessing.Pool()
+        pool = multiprocessing.Pool(processes=16)
         pool.starmap(for_multi, zip(primary_list, [user_info] * 30, [session] * 30))
         pool.close()
         random_time = random.random() + 1
