@@ -19,8 +19,12 @@ if __name__ == '__main__':
     while True:
         modified_list = []
         primary_list = get_info_item.get()
-        pool = multiprocessing.Pool(processes=16)
-        pool.starmap(for_multi, zip(primary_list, [user_info] * 30, [session] * 30))
+        pool = multiprocessing.Pool(processes=10)
+        try:
+            pool.starmap(for_multi, zip(primary_list, [user_info] * 30, [session] * 30))
+        except requests.exceptions.ConnectionError:
+            print("visit refused!")
+            time.sleep(10)
         pool.close()
         random_time = random.random() + 1
         print(random_time)
