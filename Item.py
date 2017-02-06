@@ -1,4 +1,6 @@
+import login
 import requests
+import notification
 import personal_account_info
 
 
@@ -87,7 +89,7 @@ class Item(object):
         }
         session.post(url, data=data)
 
-    def operate(self, user_info, session):
+    def operate(self, user_info, session, pushbullet_access_token=0):
         buy_list = self.get_buy_list()
         sell_list = self.get_sell_list()
         if buy_list:
@@ -99,26 +101,41 @@ class Item(object):
             highest_buy_price = 0
         for item in sell_list:
             buy_reason = 0
-            if int(item["price"]) <= 20:
-                buy_reason = "price <= 20 "
-            elif highest_buy_price != 0:
-                if float(item["price"]) * 1.3 <= highest_buy_price * 0.95:
+            if highest_buy_price != 0:
+                if float(item["price"]) * 1.2 <= highest_buy_price * 0.95:
                     buy_reason = "price << highest buy price"
-            elif int(item["price"]) <= self.market_price * 0.95 * 0.5:
+            elif 100000 <= int(item["price"]) <= self.market_price and int(item["price"]) != 200000:
                 history_list = self.get_history_list()
                 lower = 0
                 for event in history_list:
-                    if float(item["price"]) <= float(event["price"]) * 0.95 * 0.5:
+                    if float(event["price"]) / float(event["num"]) >= self.market_price:
                         lower += 1
                 if lower >= 6:
-                    for event in history_list:
-                        if float(item["price"]) <= float(event["price"]) * 0.95 * 0.5:
-                            print(event["price"])
-                    buy_reason = "price << market_price"
+                    buy_reason = "Reasonable luxury"
+            # if int(item["price"]) <= 20:
+            #     buy_reason = "price <= 20 "
+            # elif highest_buy_price != 0:
+            #     if float(item["price"]) * 1.2 <= highest_buy_price * 0.95:
+            #         buy_reason = "price << highest buy price"
+            # elif int(item["price"]) <= self.market_price * 0.95 * 0.75:
+            #     history_list = self.get_history_list()
+            #     lower = 0
+            #     for event in history_list:
+            #         if float(item["price"]) <= (float(event["price"]) / float(event["num"])) * 0.95 * 0.75:
+            #             lower += 1
+            #     if lower >= 6:
+            #         buy_reason = "price << market_price"
+            # elif 100000 <= int(item["price"]) <= self.market_price:
+            #     buy_reason = "Reasonable luxury"
             if buy_reason != 0:
-                print("name:{}\tprice:{}\tinventory:{}".format(self.name, item["price"], self.inventory))
+                gold = login.get_gold(session)
+                amount = min(int(int(gold) / int(item["price"])), item["inventory"])
+                self.buy(item["product_id"], amount, user_info["session_id"], session)
+                if pushbullet_access_token:
+                    notification.pushbullet(self, buy_reason, pushbullet_access_token)
+                print("name:{}\tprice:{}\tinventory:{}".format(self.name, self.price, self.inventory))
                 print("slot:{}\ttype:{}\thero:{}".format(self.slot, self.type, self.hero))
                 print(buy_reason + "\n")
-                self.buy(item["product_id"], item["inventory"], user_info["session_id"], session)
+
             else:
                 break

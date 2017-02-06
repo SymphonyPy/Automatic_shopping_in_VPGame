@@ -70,4 +70,12 @@ def login(account, session=requests.session()):
         print(user_info)
         return user_info
 
+
+def get_gold(session=requests.session()):
+    homepage_url = "http://www.vpgame.com/"
+    pattern = re.compile(
+        '''"nickname":"(.*?)".*?"gold":"(.*?)","level":"(.*?)"}.*?"session_id":"(.*?)","user_id":"(.*?)"''')
+    html = session.get(homepage_url).text
+    return re.findall(pattern=pattern, string=str(html))[0][1]
+
 # login(personal_account_info.VPGame_account)
