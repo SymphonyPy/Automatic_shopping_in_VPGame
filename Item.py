@@ -1,4 +1,3 @@
-import login
 import requests
 import notification
 import personal_account_info
@@ -89,7 +88,7 @@ class Item(object):
         }
         session.post(url, data=data)
 
-    def operate(self, user_info, session, pushbullet_access_token=0):
+    def operate(self, user, pushbullet_access_token=0):
         buy_list = self.get_buy_list()
         sell_list = self.get_sell_list()
         if buy_list:
@@ -127,10 +126,10 @@ class Item(object):
             #         buy_reason = "price << market_price"
             # elif 100000 <= int(item["price"]) <= self.market_price:
             #     buy_reason = "Reasonable luxury"
-            if buy_reason != 0:
-                gold = login.get_gold(session)
+            if buy_reason:
+                gold = user.get_gold()
                 amount = min(int(int(gold) / int(item["price"])), item["inventory"])
-                self.buy(item["product_id"], amount, user_info["session_id"], session)
+                self.buy(item["product_id"], amount, user.info["session_id"], user.session)
                 if pushbullet_access_token:
                     notification.pushbullet(self, buy_reason, pushbullet_access_token)
                 print("name:{}\tprice:{}\tinventory:{}".format(self.name, self.price, self.inventory))
