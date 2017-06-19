@@ -1,36 +1,37 @@
-import Item
 import time
-import User
-import random
+import requests
+import notification
 import get_info_item
 import multiprocessing
-import personal_account_info
+from User import User
+from Item import Item
+from personal_account_info import wechat_SCKEY, VPGame_account
 
 
-def for_multi(primary_info, user, pushbullet_access_token):
-    modified_item = Item.Item(primary_info)
-    modified_item.operate(user=user, pushbullet_access_token=pushbullet_access_token)
+def for_multi(primary_info, user, wechat_SCKEY):
+    modified_item = Item(primary_info)
+    modified_item.operate(user=user, wechat_SCKEY=wechat_SCKEY)
 
 
 if __name__ == '__main__':
-    user = User.User(personal_account_info.VPGame_account)
+    have_reported = 0
+    user = User(VPGame_account)
+    notification.wechat_send("登录成功!", str(time.strftime('%H:%M:%S', time.localtime(time.time()))), wechat_SCKEY)
     while True:
         modified_list = []
-        pool = multiprocessing.Pool(processes=16)
         try:
             primary_list = get_info_item.get()
-            pool.starmap(for_multi,
-                         zip(primary_list, [user] * 45, [personal_account_info.pushbullet_access_token] * 45))
-        except:
-            print("visit refused!")
-            time.sleep(10)
+        except requests.exceptions.ReadTimeout:
+            print("Failed to get items'info.")
+            print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))))
+            time.sleep(5)
+        pool = multiprocessing.Pool(processes=16)
+        pool.starmap(for_multi, zip(primary_list, [user] * 45, [wechat_SCKEY] * 45))
         pool.close()
-        if int(time.strftime('%H', time.localtime(time.time()))) == 1 and int(
-                time.strftime('%M', time.localtime(time.time()))) == 0 and 0 <= int(
-            time.strftime('%S', time.localtime(time.time()))) <= 20:
-            user.check_in()
-        random_time = random.random() + 1
-        print(random_time)
-        print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + '\n')
-        time.sleep(random_time)
-        print("\n\n")
+        if user.check_in():
+            notification.wechat_send("签到成功!", str(time.strftime('%H:%M:%S', time.localtime(time.time()))), wechat_SCKEY)
+        if int(time.strftime('%H', time.localtime(time.time()))) % 8 == 0 and have_reported == 0:
+            notification.wechat_send("运行中！", str(time.strftime('%H:%M:%S', time.localtime(time.time()))), wechat_SCKEY)
+            have_reported = 1
+        elif int(time.strftime('%H', time.localtime(time.time()))) % 8 == 1 and have_reported == 1:
+            have_reported = 0

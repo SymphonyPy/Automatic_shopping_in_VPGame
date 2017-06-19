@@ -1,4 +1,5 @@
 import re
+import time
 import requests
 
 
@@ -6,6 +7,7 @@ class User(object):
     def __init__(self, account):
         self.session = requests.session()
         self.info = self.login(account)
+        self.check_status = 0
 
     def login(self, account):
         user_info = {
@@ -92,11 +94,22 @@ class User(object):
         return re.findall(pattern=pattern, string=str(html))[0][1]
 
     def check_in(self):
-        headers = {
-            "Host": "www.vpgame.com",
-            "Proxy-Connection": "keep-alive",
-            "Referer": "http://www.vpgame.com/user/my.html",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36",
-            "X-Requested-With": "XMLHttpRequest"
-        }
-        print(self.session.get("http://www.vpgame.com/user/default-checkinajax.html", headers=headers))
+        hour = int(time.strftime('%H', time.localtime(time.time())))
+        minute = int(time.strftime('%M', time.localtime(time.time())))
+        if hour == 1 and minute == 0 and self.check_status == 0:
+            self.check_status = 1
+            headers = {
+                "Accept": "application/json,text/javascript,*/*; q=0.01",
+                "Accept - Encoding": "gzip, deflate",
+                "Accept - Language": "zh-CN,zh;q=0.8",
+                "Connection": "keep-alive",
+                "Host": "www.vpgame.com",
+                "Referer": "http://www.vpgame.com/market/product?tab=item",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36",
+                "X-Requested-With": "XMLHttpRequest"
+            }
+            self.session.get("http://www.vpgame.com/user/default-checkinajax.html", headers=headers)
+            return True
+        elif hour == 0 and minute == 0 and self.check_status == 1:
+            self.check_status = 0
+        return False

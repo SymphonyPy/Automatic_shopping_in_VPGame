@@ -1,3 +1,4 @@
+import time
 import requests
 import notification
 import personal_account_info
@@ -54,7 +55,10 @@ class Item(object):
             }"""
         url = "http://www.vpgame.com/webservice/v2/market/product/list?callback=&item_id=" + str(
             self.item_id) + "&type=buy&current_page=1&lang=en_US"
-        items = [item for item in requests.get(url).json()["body"]["items"]]
+        try:
+            items = [item for item in requests.get(url).json()["body"]["items"]]
+        except:
+            items = []
         return items
 
     def get_history_list(self):
@@ -74,7 +78,10 @@ class Item(object):
         }"""
         url = "http://www.vpgame.com/webservice/v2/market/product/history?callback=&item_id=" + str(
             self.item_id) + "&lang=en_US"
-        events = [event for event in requests.get(url).json()["body"]]
+        try:
+            events = [event for event in requests.get(url).json()["body"]]
+        except:
+            events = []
         return events
 
     def buy(self, product_id, number, session_id, session):
@@ -88,9 +95,21 @@ class Item(object):
         }
         session.post(url, data=data)
 
-    def operate(self, user, pushbullet_access_token=0):
-        buy_list = self.get_buy_list()
-        sell_list = self.get_sell_list()
+    def operate(self, user, wechat_SCKEY=0):
+        try:
+            buy_list = self.get_buy_list()
+        except:
+            buy_list = []
+            print("Failed to call get_buy_list")
+            print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))))
+            time.sleep(5)
+        try:
+            sell_list = self.get_sell_list()
+        except:
+            sell_list = []
+            print("Failed to call get_sell_list")
+            print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))))
+            time.sleep(5)
         if buy_list:
             for item in buy_list:
                 if int(item["inventory"]) > 0:
@@ -100,41 +119,47 @@ class Item(object):
             highest_buy_price = 0
         for item in sell_list:
             buy_reason = 0
-            if highest_buy_price != 0:
-                if float(item["price"]) * 1.2 <= highest_buy_price * 0.95:
+            if int(item["price"]) <= 20:
+                buy_reason = "price <= 20 "
+            elif highest_buy_price != 0:
+                if float(item["price"]) * 1.1 <= highest_buy_price * 0.95:
                     buy_reason = "price << highest buy price"
-            elif 100000 <= int(item["price"]) <= self.market_price and int(item["price"]) != 200000:
+            elif int(item["price"]) <= self.market_price * 0.95 * 0.75:
                 history_list = self.get_history_list()
                 lower = 0
                 for event in history_list:
-                    if float(event["price"]) / float(event["num"]) >= self.market_price:
+                    if float(item["price"]) <= (float(event["price"]) / float(event["num"])) * 0.95 * 0.75:
                         lower += 1
                 if lower >= 6:
-                    buy_reason = "Reasonable luxury"
-            # if int(item["price"]) <= 20:
-            #     buy_reason = "price <= 20 "
-            # elif highest_buy_price != 0:
-            #     if float(item["price"]) * 1.2 <= highest_buy_price * 0.95:
-            #         buy_reason = "price << highest buy price"
-            # elif int(item["price"]) <= self.market_price * 0.95 * 0.75:
-            #     history_list = self.get_history_list()
-            #     lower = 0
-            #     for event in history_list:
-            #         if float(item["price"]) <= (float(event["price"]) / float(event["num"])) * 0.95 * 0.75:
-            #             lower += 1
-            #     if lower >= 6:
-            #         buy_reason = "price << market_price"
+                    buy_reason = "price << market_price"
             # elif 100000 <= int(item["price"]) <= self.market_price:
             #     buy_reason = "Reasonable luxury"
             if buy_reason:
-                gold = user.get_gold()
+                try:
+                    gold = user.get_gold()
+                except:
+                    gold = 200000
+                    print("Failed to call user.get_gold.")
+                    print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))))
+                    time.sleep(5)
                 amount = min(int(int(gold) / int(item["price"])), item["inventory"])
-                self.buy(item["product_id"], amount, user.info["session_id"], user.session)
-                if pushbullet_access_token:
-                    notification.pushbullet(self, buy_reason, pushbullet_access_token)
                 print("name:{}\tprice:{}\tinventory:{}".format(self.name, self.price, self.inventory))
                 print("slot:{}\ttype:{}\thero:{}".format(self.slot, self.type, self.hero))
                 print(buy_reason + "\n")
-
+                self.buy(item["product_id"], amount, user.info["session_id"], user.session)
+                # if pushbullet_access_token:
+                #     try:
+                #         notification.pushbullet(self, buy_reason, pushbullet_access_token)
+                #     except:
+                #         print("Failed to call notification.pushbullet.")
+                #         print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))))
+                #         time.sleep(5)
+                if wechat_SCKEY:
+                    try:
+                        notification.wechat(self, buy_reason, wechat_SCKEY)
+                    except:
+                        print("Failed to call notification.wechat.")
+                        print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))))
+                        time.sleep(5)
             else:
                 break
