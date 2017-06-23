@@ -142,7 +142,7 @@ class Item(object):
                     print("Failed to call user.get_gold.")
                     print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))))
                     time.sleep(5)
-                amount = min(int(int(gold) / int(item["price"])), item["inventory"])
+                amount = min((gold / int(item["price"]), item["inventory"]))
                 print("name:{}\tprice:{}\tinventory:{}".format(self.name, self.price, self.inventory))
                 print("slot:{}\ttype:{}\thero:{}".format(self.slot, self.type, self.hero))
                 print(buy_reason + "\n")

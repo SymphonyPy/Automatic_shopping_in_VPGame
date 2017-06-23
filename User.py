@@ -90,7 +90,7 @@ class User(object):
     def get_gold(self):
         homepage_url = "http://www.vpgame.com/"
         pattern = re.compile(
-            '''"nickname":"(.*?)".*?"gold":"(.*?)","level":"(.*?)"}.*?"session_id":"(.*?)","user_id":"(.*?)"''')
+            '''"nickname":"(.*?)".*?"gold":"(.*?)","level":"(.*?)".*?"session_id":"(.*?)","user_id":"(.*?)"''')
         html = self.session.get(homepage_url).text
         return re.findall(pattern=pattern, string=str(html))[0][1]
 
