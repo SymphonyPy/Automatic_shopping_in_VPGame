@@ -20,7 +20,7 @@ class User(object):
         homepage_url = "http://www.vpgame.com/"
         login_url = "http://passport.vpgame.com/account/signin"
         sent_url = "http://passport.vpgame.com/account/securitycode"
-        verify_url = "http://passport.vpgame.com/login/accountverify.html?redirect=http://passport.vpgame.com/login.html?redirect=http://www.vpgame.com"
+        verify_url = "http://passport.vpgame.com/account/security"
         data = {
             "account": account["username"],
             "password": account["password"],
@@ -32,6 +32,7 @@ class User(object):
             'Accept-Language': 'zh-CN,zh;q=0.8',
             'Connection': 'keep-alive',
             'Content-Length': '55',
+            "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
             'Host': 'passport.vpgame.com',
             'Origin': 'http://passport.vpgame.com',
             'Referer': 'http://passport.vpgame.com/signin?redirect=http%3A%2F%2Fwww.vpgame.com%2F',
@@ -40,7 +41,7 @@ class User(object):
         }
         self.session.post(login_url, data=data, headers=headers)
         pattern = re.compile(
-            '''"nickname":"(.*?)".*?"gold":"(.*?)","level":"(.*?)"}.*?"session_id":"(.*?)","user_id":"(.*?)"''')
+            '''"nickname":"(.*?)".*?"gold":"(.*?)","level":"(.*?)".*?"session_id":"(.*?)","user_id":"(.*?)"''')
         try:
             html = self.session.get(homepage_url).text
             for i, j in zip(["nickname", "gold", "level", "session_id", "user_id"],
@@ -53,10 +54,10 @@ class User(object):
                 'Accept': '*/*',
                 'Accept-Encoding': 'gzip, deflate',
                 'Accept-Language': 'zh-CN,zh;q=0.8',
-                'Connection': 'keep-alive',
                 'Content-Length': '0',
                 'Host': 'passport.vpgame.com',
                 'Origin': 'http://passport.vpgame.com',
+                "Proxy-Connection": "keep-alive",
                 'Referer': 'http://passport.vpgame.com/signin?redirect=http%3A%2F%2Fwww.vpgame.com%2F',
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36',
                 'X-Requested-With': 'XMLHttpRequest'

@@ -16,7 +16,7 @@ def for_multi(primary_info, user, wechat_SCKEY):
 if __name__ == '__main__':
     have_reported = 0
     user = User(VPGame_account)
-    notification.wechat_send("登录成功!", str(time.strftime('%H:%M:%S', time.localtime(time.time()))), wechat_SCKEY)
+    notification.wechat_send("Auto_Assistant启动成功!", str(time.strftime('%H:%M:%S', time.localtime(time.time()))), wechat_SCKEY)
     while True:
         modified_list = []
         try:
@@ -31,7 +31,8 @@ if __name__ == '__main__':
         if user.check_in():
             notification.wechat_send("签到成功!", str(time.strftime('%H:%M:%S', time.localtime(time.time()))), wechat_SCKEY)
         if int(time.strftime('%H', time.localtime(time.time()))) % 8 == 0 and have_reported == 0:
-            notification.wechat_send("运行中！", str(time.strftime('%H:%M:%S', time.localtime(time.time()))), wechat_SCKEY)
+            user = User(VPGame_account)
+            notification.wechat_send("对话状态更新成功！", str(time.strftime('%H:%M:%S', time.localtime(time.time()))), wechat_SCKEY)
             have_reported = 1
         elif int(time.strftime('%H', time.localtime(time.time()))) % 8 == 1 and have_reported == 1:
             have_reported = 0
