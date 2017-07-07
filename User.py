@@ -92,7 +92,7 @@ class User(object):
         pattern = re.compile(
             '''"nickname":"(.*?)".*?"gold":"(.*?)","level":"(.*?)".*?"session_id":"(.*?)","user_id":"(.*?)"''')
         html = self.session.get(homepage_url).text
-        return re.findall(pattern=pattern, string=str(html))[0][1]
+        return int(re.findall(pattern=pattern, string=str(html))[0][1])
 
     def check_in(self):
         hour = int(time.strftime('%H', time.localtime(time.time())))

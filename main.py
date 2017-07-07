@@ -16,7 +16,8 @@ def for_multi(primary_info, user, wechat_SCKEY):
 if __name__ == '__main__':
     have_reported = 0
     user = User(VPGame_account)
-    notification.wechat_send("Auto_Assistant启动成功!", str(time.strftime('%H:%M:%S', time.localtime(time.time()))), wechat_SCKEY)
+    notification.wechat_send("Auto_Assistant启动成功!", str(time.strftime('%H:%M:%S', time.localtime(time.time()))),
+                             wechat_SCKEY)
     while True:
         modified_list = []
         try:
@@ -30,9 +31,13 @@ if __name__ == '__main__':
         pool.close()
         if user.check_in():
             notification.wechat_send("签到成功!", str(time.strftime('%H:%M:%S', time.localtime(time.time()))), wechat_SCKEY)
-        if int(time.strftime('%H', time.localtime(time.time()))) % 8 == 0 and have_reported == 0:
+        # if int(time.strftime('%H', time.localtime(time.time()))) % 3 == 0 and have_reported == 0:
+        try:
+            print(user.get_gold())
+        except:
             user = User(VPGame_account)
-            notification.wechat_send("对话状态更新成功！", str(time.strftime('%H:%M:%S', time.localtime(time.time()))), wechat_SCKEY)
-            have_reported = 1
-        elif int(time.strftime('%H', time.localtime(time.time()))) % 8 == 1 and have_reported == 1:
-            have_reported = 0
+            notification.wechat_send("对话状态更新成功！", str(time.strftime('%H:%M:%S', time.localtime(time.time()))),
+                                     wechat_SCKEY)
+        #         have_reported = 1
+        # elif int(time.strftime('%H', time.localtime(time.time()))) % 3 == 1 and have_reported == 1:
+        #     have_reported = 0
